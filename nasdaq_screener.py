@@ -2,6 +2,8 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 from datetime import datetime
+from streamlit_autorefresh import st_autorefresh
+
 
 # --- SETTINGS ---
 st.set_page_config(page_title="NASDAQ Screener", layout="wide")
@@ -22,6 +24,9 @@ def calculate_rsi(series, period=14):
     loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
     rs = gain / loss
     return 100 - (100 / (1 + rs))
+
+# Refresh every 5 minutes (300,000 ms)
+st_autorefresh(interval=5 * 60 * 1000, key="refresh")
 
 # --- LOAD NASDAQ TICKERS ---
 @st.cache_data
@@ -65,8 +70,6 @@ if run_scan:
 
             except Exception as e:
                 continue
-    # AUTO REFRESH
-    st_autorefresh(interval=5 * 60 * 1000)  # every 5 minutes
     
     # Display results
     if results:
