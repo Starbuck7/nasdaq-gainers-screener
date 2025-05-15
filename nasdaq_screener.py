@@ -65,7 +65,9 @@ if run_scan:
 
             except Exception as e:
                 continue
-
+    # AUTO REFRESH
+    st_autorefresh(interval=5 * 60 * 1000)  # every 5 minutes
+    
     # Display results
     if results:
         df = pd.DataFrame(results)
