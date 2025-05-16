@@ -2,6 +2,7 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import plotly.graph_objects as go
+from datetime import datetime
 
 st.set_page_config(page_title="📈 NASDAQ Stock Screener", layout="wide")
 st.title("📈 NASDAQ Stock Screener")
@@ -11,7 +12,6 @@ st.title("📈 NASDAQ Stock Screener")
 def load_nasdaq_tickers():
     url = "https://datahub.io/core/nasdaq-listings/r/nasdaq-listed-symbols.csv"
     df = pd.read_csv(url)
-    # Filter out test tickers or invalid entries if needed
     tickers = df['Symbol'].tolist()
     return tickers
 
@@ -24,67 +24,46 @@ def calculate_rsi(series, period=14):
     rsi = 100 - (100 / (1 + rs))
     return rsi
 
+# --- UI Controls ---
+st.sidebar.header("📊 Filter Criteria")
+st.sidebar.write("Only analyzing today's top NASDAQ gainers.")
+run_scan = st.sidebar.button("🔍 Run Screener")
+
 @st.cache_data(ttl=600)  # cache results for 10 minutes
 def run_scan_cached(tickers):
     results = []
+
     for i, ticker in enumerate(tickers):
         if i % 50 == 0:
             st.write(f"Processing {i} / {len(tickers)} tickers...")
 
         try:
             stock = yf.Ticker(ticker)
+            info = stock.info
+
             hist = stock.history(period="3d", interval="1d")
             if hist.shape[0] < 2:
                 continue
             open_price = hist['Open'].iloc[-2]
             close_price = hist['Close'].iloc[-1]
             gain_pct = ((close_price - open_price) / open_price) * 100
+
             if gain_pct < 30:
                 continue
 
             hist_15d = stock.history(period="15d", interval="1d")
             if hist_15d.empty or 'Close' not in hist_15d:
                 continue
-
             rsi_series = calculate_rsi(hist_15d['Close'])
             rsi = rsi_series.iloc[-1] if not rsi_series.empty else 0
+
             if rsi <= 70:
                 continue
 
-            info = stock.info
-            market_cap = info.get('marketCap', 0)
+            market_cap = info.get("marketCap", 0)
             if market_cap is None or market_cap >= 50_000_000:
                 continue
 
-            # Add any other analysis and append results
-            results.append({
-                "Ticker": ticker,
-                "Gain %": round(gain_pct, 2),
-                "RSI": round(rsi, 2),
-                "Market Cap": market_cap,
-            })
-
-        except Exception as e:
-            st.warning(f"Error processing {ticker}: {e}")
-            continue
-    return results
-    
-# --- UI Controls ---
-st.sidebar.header("📊 Filter Criteria")
-st.sidebar.write("Only analyzing today's top NASDAQ gainers.")
-run_scan = st.sidebar.button("🔍 Run Screener")
-
-if run_scan:
-    tickers = load_nasdaq_tickers()
-    st.write(f"Total NASDAQ tickers loaded: {len(tickers)}")
-    with st.spinner("Running scan (cached for 10 minutes)..."):
-        results = run_scan_cached(tickers)
-
-    if results:
-        df = pd.DataFrame(results)
-        st.dataframe(df)
-        
-            # Optional additional info
             cash = info.get('totalCash', None)
             operating_expenses = info.get('totalOperatingExpenses', None)
             shares_outstanding = info.get('sharesOutstanding', None)
@@ -116,6 +95,14 @@ if run_scan:
         except Exception as e:
             st.warning(f"Error processing {ticker}: {e}")
             continue
+
+    return results
+
+if run_scan:
+    tickers = load_nasdaq_tickers()
+    st.write(f"Total NASDAQ tickers loaded: {len(tickers)}")
+    with st.spinner("Running scan (cached for 10 minutes)..."):
+        results = run_scan_cached(tickers)
 
     if results:
         df = pd.DataFrame(results)
