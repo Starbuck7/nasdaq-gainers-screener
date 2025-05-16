@@ -20,11 +20,15 @@ Scan for **stocks with:**
 
 # --- RSI FUNCTION ---
 def calculate_rsi(series, period=14):
+    if series is None or series.empty:
+        return pd.Series(dtype=float)
+
     delta = series.diff()
     gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
     rs = gain / loss
-    return 100 - (100 / (1 + rs))
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
 
 def human_format(num):
     if num is None:
