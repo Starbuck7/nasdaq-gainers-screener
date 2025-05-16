@@ -70,7 +70,9 @@ def load_nasdaq():
         st.error("Ticker column not found.")
         return []
         
-    tickers = load_nasdaq()
+tickers = load_nasdaq()
+st.write("Tickers loaded:", tickers)
+
     if not tickers:
         st.error("No tickers loaded. Please check your NASDAQ data source.")
         st.stop()
@@ -84,7 +86,7 @@ results = []
 if run_scan:
     with st.spinner("Scanning stocks (please wait 1-2 mins)..."):
         for ticker in tickers:
-            st.write(f"Scanning {ticker}...")
+            st.write(f"Ticker: {ticker}")
             try:
                 stock = yf.Ticker(ticker)
                 hist = stock.history(period="2d", interval="5m")
