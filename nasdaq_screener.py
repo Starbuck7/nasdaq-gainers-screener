@@ -67,7 +67,11 @@ def load_nasdaq():
     else:
         st.error("Ticker column not found.")
         return []
-
+    tickers = load_nasdaq()
+    if not tickers:
+        st.error("No tickers loaded. Please check your NASDAQ data source.")
+        st.stop()
+        
 # --- FILTERING ---
 run_scan = st.button("🔍 Run Scan")
 
