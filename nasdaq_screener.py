@@ -1,6 +1,7 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
+import plotly.graph_objects as go
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
@@ -16,6 +17,43 @@ Scan for **stocks with:**
 - RSI > 70
 - Market cap < $50M
 """)
+
+#Add chart as subheader
+st.subheader("📉 Price Charts")
+
+for ticker in df["Ticker"]:
+    with st.expander(f"Chart for {ticker}"):
+        try:
+            chart_data = yf.Ticker(ticker).history(period="5d", interval="15m")
+            if chart_data.empty:
+                st.warning("No chart data available.")
+                continue
+
+            fig = go.Figure(data=[
+                go.Candlestick(
+                    x=chart_data.index,
+                    open=chart_data['Open'],
+                    high=chart_data['High'],
+                    low=chart_data['Low'],
+                    close=chart_data['Close'],
+                    name="Price"
+                )
+            ])
+
+            fig.update_layout(
+                title=f"{ticker} - 5 Day Candlestick Chart",
+                xaxis_title="Time",
+                yaxis_title="Price",
+                xaxis_rangeslider_visible=False,
+                height=400,
+                margin=dict(l=10, r=10, t=40, b=10),
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+        except Exception as e:
+            st.warning(f"Could not load chart for {ticker}")
+
+
 
 # --- RSI FUNCTION ---
 def calculate_rsi(series, period=14):
