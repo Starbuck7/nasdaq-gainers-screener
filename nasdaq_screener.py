@@ -112,10 +112,11 @@ if run_scan:
                 if hist.empty:
                     continue
 
-            open_price = hist["Open"][0]
+            
                   
                 
 # Prices & RSI
+open_price = hist["Open"][0]
 current_price = hist['Close'][-1]
 gain_pct = ((current_price - open_price) / open_price) * 100
 rsi_series = calculate_rsi(hist['Close'])
@@ -133,7 +134,7 @@ offering_ability = "High" if float_shares and float_shares > 0.5 * shares_outsta
 dilution_risk = "High" if cash and cash < 10_000_000 and float_shares and float_shares > 0.7 * shares_outstanding else "Moderate"
 cash_need = "Urgent" if months_cash_left and months_cash_left < 3 else "Moderate"
 
- except Exception as e:
+except Exception as e:
                 continue   
 
 # Calculate Months of Cash Left
