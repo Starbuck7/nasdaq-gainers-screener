@@ -177,8 +177,9 @@ if gain_pct >= 30 and rsi and rsi > 70 and market_cap and market_cap < 5e7:
          
     st.success(f"Found {len(df)} matching stocks!")
     st.dataframe(styled_df, use_container_width=True)
+    # Optional: Add CSV export
+    csv = df.to_csv(index=False)
+    st.download_button("📥 Download CSV", csv, "screener_results.csv", "text/csv")
       
-        csv = df.to_csv(index=False)
-        st.download_button("📥 Download CSV", csv, file_name="stock_alerts.csv")
     else:
         st.warning("No matching stocks found.")
