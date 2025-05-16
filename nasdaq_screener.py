@@ -61,7 +61,6 @@ def load_nasdaq():
     url = "https://datahub.io/core/nasdaq-listings/r/nasdaq-listed.csv"
     df = pd.read_csv(url)
     df.columns = df.columns.str.strip().str.lower()
-
     if 'symbol' in df.columns:
         return df['symbol'].dropna().unique().tolist()
     elif 'ticker' in df.columns:
@@ -70,15 +69,16 @@ def load_nasdaq():
         st.error("Ticker column not found.")
         return []
         
+#---- LOAD TICKERS ----
 tickers = load_nasdaq()
 st.write("Tickers loaded:", tickers)
 
-    if not tickers:
-        st.error("No tickers loaded. Please check your NASDAQ data source.")
-        st.stop()
-    
-    st.sidebar.write(f"Loaded {len(tickers)} NASDAQ tickers.")
-        
+if not tickers:
+    st.error("No tickers loaded. Please check your NASDAQ data source.")
+    st.stop()
+
+st.sidebar.write(f"Loaded {len(tickers)} NASDAQ tickers.")
+
 # --- FILTERING ---
 run_scan = st.button("🔍 Run Scan")
 
@@ -94,6 +94,7 @@ if run_scan:
                 if hist.empty:
                     continue    
             except Exception as e:
+                st.warning(f"Error with {ticker}: {e}")
                 continue
                 
 # Prices & RSI
