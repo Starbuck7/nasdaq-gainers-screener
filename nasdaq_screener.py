@@ -125,8 +125,8 @@ if run_scan:
               
     # Display results
     if results:
-    df = pd.DataFrame(results)
-    df = df[["Ticker", "Offering Ability", "Dilution Risk", "Cash Need",
+        df = pd.DataFrame(results)
+        df = df[["Ticker", "Offering Ability", "Dilution Risk", "Cash Need",
              "Gain %", "RSI", "Market Cap", "Months of Cash Left",
              "Float Shares", "Total Outstanding Shares", "Cash Position ($)"]]
 
