@@ -71,7 +71,6 @@ def load_nasdaq():
         
 #---- LOAD TICKERS ----
 tickers = load_nasdaq()
-st.write("Tickers loaded:", tickers)
 
 if not tickers:
     st.error("No tickers loaded. Please check your NASDAQ data source.")
@@ -148,6 +147,7 @@ if run_scan:
                     months_cash_left = round(cash / (operating_expenses / 12), 1)
 
                 # Apply filters
+                if gain_pct >= 30 and rsi and rsi > 70 and market_cap and market_cap < 5e7:
                 results.append({
                     "Offering Ability": offering_ability,
                     "Dilution Risk": dilution_risk,
