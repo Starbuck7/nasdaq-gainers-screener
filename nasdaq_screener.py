@@ -91,82 +91,109 @@ if run_scan:
                 stock = yf.Ticker(ticker)
                 hist = stock.history(period="2d", interval="5m")
                 info = stock.info
-                if hist.empty:
-                    continue    
-            except Exception as e:
-                st.warning(f"Error with {ticker}: {e}")
-                continue
                 
-# Prices & RSI
-    open_price = hist["Open"][0]
-    current_price = hist['Close'][-1]
-    gain_pct = ((current_price - open_price) / open_price) * 100
-    rsi_series = calculate_rsi(hist['Close'])
-    rsi = rsi_series.iloc[-1] if not rsi_series.empty else None
+                # Ensure history is available
+                if hist.empty or "Open" not in hist.columns or "Close" not in hist.columns:
+                    continue
+
+                # Calculate % Gain on the day
+                open_price = hist["Open"][-1]
+                close_price = hist["Close"][-1]
+                gain_pct = ((close_price - open_price) / open_price) * 100
+
+                # Skip if gain < 30%
+                if gain_pct < 30:
+                    continue
+
+                # RSI calculation (using last 14 days of 1d data)
+                rsi_hist = stock.history(period="15d", interval="1d")
+                delta = rsi_hist["Close"].diff()
+                gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+                loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+                rs = gain / loss
+                rsi = 100 - (100 / (1 + rs))
+                latest_rsi = rsi.iloc[-1] if not rsi.isna().all() else 0
+
+                # Skip if RSI <= 70
+                if latest_rsi <= 70:
+                    continue
+
+                # Market Cap filter
+                market_cap = info.get("marketCap", 0)
+                if market_cap is None or market_cap >= 50_000_000:
+                    continue
+
+                # Prices & RSI
+                open_price = hist["Open"][0]
+                current_price = hist['Close'][-1]
+                gain_pct = ((current_price - open_price) / open_price) * 100
+                rsi_series = calculate_rsi(hist['Close'])
+                rsi = rsi_series.iloc[-1] if not rsi_series.empty else None
             
-# Fundamentals
-    market_cap = info.get("marketCap", 0)
-    cash = info.get("totalCash", None)
-    operating_expenses = info.get("totalOperatingExpenses", None)
-    shares_outstanding = info.get("sharesOutstanding", None)
-    float_shares = info.get("floatShares", None)
+                # Fundamentals
+                market_cap = info.get("marketCap", 0)
+                cash = info.get("totalCash", None)
+                operating_expenses = info.get("totalOperatingExpenses", None)
+                shares_outstanding = info.get("sharesOutstanding", None)
+                float_shares = info.get("floatShares", None)
 
-# --- Custom Risk Metrics ---
-    offering_ability = "High" if float_shares and float_shares > 0.5 * shares_outstanding else "Low"
-    dilution_risk = "High" if cash and cash < 10_000_000 and float_shares and float_shares > 0.7 * shares_outstanding else "Moderate"
-    cash_need = "Urgent" if months_cash_left and months_cash_left < 3 else "Moderate"
+                # --- Custom Risk Metrics ---
+                offering_ability = "High" if float_shares and float_shares > 0.5 * shares_outstanding else "Low"
+                dilution_risk = "High" if cash and cash < 10_000_000 and float_shares and float_shares > 0.7 * shares_outstanding else "Moderate"
+                cash_need = "Urgent" if months_cash_left and months_cash_left < 3 else "Moderate"
 
-# Calculate Months of Cash Left
-    months_cash_left = None
-    if cash and operating_expenses and operating_expenses > 0:
-        months_cash_left = round(cash / (operating_expenses / 12), 1)
+                # Calculate Months of Cash Left
+                months_cash_left = None
+                if cash and operating_expenses and operating_expenses > 0:
+                    months_cash_left = round(cash / (operating_expenses / 12), 1)
 
-# Apply filters
-    if gain_pct >= 30 and rsi and rsi > 70 and market_cap and market_cap < 5e7:
-        results.append({
-            "Offering Ability": offering_ability,
-            "Dilution Risk": dilution_risk,
-            "Cash Need": cash_need,
-            "Ticker": ticker,
-            "Price": round(current_price, 2),
-            "Gain %": round(gain_pct, 2),
-            "RSI": round(rsi, 2),
-            "Market Cap": market_cap,
-            "Cash ($)": cash,
-            "Months Cash Left": months_cash_left,
-            "Float": float_shares,
-            "Shares Outstanding": shares_outstanding,
-        })
-    
+                # Apply filters
+                results.append({
+                    "Offering Ability": offering_ability,
+                    "Dilution Risk": dilution_risk,
+                    "Cash Need": cash_need,
+                    "Ticker": ticker,
+                    "Price": round(current_price, 2),
+                    "Gain %": round(gain_pct, 2),
+                    "RSI": round(rsi, 2),
+                    "Market Cap": market_cap,
+                    "Cash ($)": cash,
+                    "Months Cash Left": months_cash_left,
+                    "Float": float_shares,
+                    "Shares Outstanding": shares_outstanding,
+                })
+                    
+            except Exception as e:
+                st.warning(f"Error processing {ticker}: {e}")
+                continue
+                  
               
     # Display results
     if results:
         df = pd.DataFrame(results)
+        st.success(f"Found {len(df)} matching stock(s):")
+        st.dataframe(df)
         df = df[["Ticker", "Offering Ability", "Dilution Risk", "Cash Need",
              "Gain %", "RSI", "Market Cap", "Months of Cash Left",
              "Float Shares", "Total Outstanding Shares", "Cash Position ($)"]]
 
-    # Highlight and display
-    def highlight_offering(val):
-        return "background-color: orange" if val == "High" else ""
-    def highlight_dilution(val):
-        return "background-color: red" if val == "High" else ""
-    def highlight_cash_need(val):
-        return "background-color: red" if val == "Urgent" else ""
+        # Highlight and display
+        def highlight_offering(val):
+            return "background-color: orange" if val == "High" else ""
+        def highlight_dilution(val):
+            return "background-color: red" if val == "High" else ""
+        def highlight_cash_need(val):
+            return "background-color: red" if val == "Urgent" else ""
 
-    styled_df = (
-        df.style
-        .applymap(highlight_offering, subset=["Offering Ability"])
-        .applymap(highlight_dilution, subset=["Dilution Risk"])
-        .applymap(highlight_cash_need, subset=["Cash Need"])
-    )
+        styled_df = (
+            df.style
+            .applymap(highlight_offering, subset=["Offering Ability"])
+            .applymap(highlight_dilution, subset=["Dilution Risk"])
+            .applymap(highlight_cash_need, subset=["Cash Need"])
+        )
 
     st.success(f"✅ Found {len(df)} matching stocks.")
     st.dataframe(styled_df, use_container_width=True)
-
-    # Download
-    csv = df.to_csv(index=False)
-    st.download_button("📥 Download CSV", csv, "screener_results.csv", "text/csv")
 
     #Add chart as subheader
     st.subheader("📉 Price Charts")
@@ -201,5 +228,5 @@ if run_scan:
             except Exception:
                 st.warning(f"Could not load chart for {ticker}")
 
-else:
-    st.warning("No matching stocks found.")
+    else:
+        st.warning("No matching stocks found.")
