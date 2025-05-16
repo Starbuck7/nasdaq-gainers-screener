@@ -18,41 +18,6 @@ Scan for **stocks with:**
 - Market cap < $50M
 """)
 
-#Add chart as subheader
-st.subheader("📉 Price Charts")
-
-for ticker in df["Ticker"]:
-    with st.expander(f"Chart for {ticker}"):
-        try:
-            chart_data = yf.Ticker(ticker).history(period="5d", interval="15m")
-            if chart_data.empty:
-                st.warning("No chart data available.")
-                continue
-
-                fig = go.Figure(data=[
-                    go.Candlestick(
-                    x=chart_data.index,
-                    open=chart_data['Open'],
-                    high=chart_data['High'],
-                    low=chart_data['Low'],
-                    close=chart_data['Close'],
-                    name="Candlesticks"
-                    )
-                ])
-
-                fig.update_layout(
-                    title=f"{ticker} - 5 Day Candlestick Chart",
-                    xaxis_title="Time",
-                    yaxis_title="Price",
-                    xaxis_rangeslider_visible=False,
-                    height=400,
-                    margin=dict(l=10, r=10, t=40, b=10),
-                )
-
-                st.plotly_chart(fig, use_container_width=True)
-        except Exception:
-            st.warning(f"Could not load chart for {ticker}")
-
 # --- RSI FUNCTION ---
 def calculate_rsi(series, period=14):
     delta = series.diff()
@@ -156,28 +121,66 @@ if run_scan:
               
     # Display results
     if results:
-        df = pd.DataFrame(results)
-       
-        # Format numbers
-        df["Cash ($)"] = df["Cash ($)"].apply(human_format)
-        df["Market Cap"] = df["Market Cap"].apply(human_format)
-        df["Float"] = df["Float"].apply(human_format)
-        df["Shares Outstanding"] = df["Shares Outstanding"].apply(human_format)
-        df["Gain %"] = df["Gain %"].apply(lambda x: f"{x:.2f}%")
-        df["RSI"] = df["RSI"].apply(lambda x: f"{x:.1f}" if x is not None else "-")
+    df = pd.DataFrame(results)
+    df = df[["Ticker", "Offering Ability", "Dilution Risk", "Cash Need",
+             "Gain %", "RSI", "Market Cap", "Months of Cash Left",
+             "Float Shares", "Total Outstanding Shares", "Cash Position ($)"]]
 
-        styled_df = (
-            df.style
-            .applymap(highlight_offering, subset=["Offering Ability"])
-            .applymap(highlight_dilution, subset=["Dilution Risk"])
-            .applymap(highlight_cash_need, subset=["Cash Need"])
-        )
-         
-        st.success(f"Found {len(df)} matching stocks!")
-        st.dataframe(styled_df, use_container_width=True)
-      
-    # Optional: Add CSV export
-        csv = df.to_csv(index=False)
-        st.download_button("📥 Download CSV", csv, "screener_results.csv", "text/csv")
-    else:
-        st.warning("No matching stocks found.")
+    # Highlight and display
+    def highlight_offering(val):
+        return "background-color: orange" if val == "High" else ""
+    def highlight_dilution(val):
+        return "background-color: red" if val == "High" else ""
+    def highlight_cash_need(val):
+        return "background-color: red" if val == "Urgent" else ""
+
+    styled_df = (
+        df.style
+        .applymap(highlight_offering, subset=["Offering Ability"])
+        .applymap(highlight_dilution, subset=["Dilution Risk"])
+        .applymap(highlight_cash_need, subset=["Cash Need"])
+    )
+
+    st.success(f"✅ Found {len(df)} matching stocks.")
+    st.dataframe(styled_df, use_container_width=True)
+
+    # Download
+    csv = df.to_csv(index=False)
+    st.download_button("📥 Download CSV", csv, "screener_results.csv", "text/csv")
+
+    #Add chart as subheader
+    st.subheader("📉 Price Charts")
+    for ticker in df["Ticker"]:
+        with st.expander(f"Chart for {ticker}"):
+        try:
+            chart_data = yf.Ticker(ticker).history(period="5d", interval="15m")
+                if chart_data.empty:
+                    st.warning("No chart data available.")
+                continue
+
+                fig = go.Figure(data=[
+                    go.Candlestick(
+                    x=chart_data.index,
+                    open=chart_data['Open'],
+                    high=chart_data['High'],
+                    low=chart_data['Low'],
+                    close=chart_data['Close'],
+                    name="Candlesticks"
+                    )
+                ])
+
+                fig.update_layout(
+                    title=f"{ticker} - 5 Day Candlestick Chart",
+                    xaxis_title="Time",
+                    yaxis_title="Price",
+                    xaxis_rangeslider_visible=False,
+                    height=400,
+                    margin=dict(l=10, r=10, t=40, b=10),
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+        except Exception:
+            st.warning(f"Could not load chart for {ticker}")
+
+else:
+    st.warning("No matching stocks found.")
