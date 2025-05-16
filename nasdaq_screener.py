@@ -148,20 +148,20 @@ if run_scan:
 
                 # Apply filters
                 if gain_pct >= 30 and rsi and rsi > 70 and market_cap and market_cap < 5e7:
-                results.append({
-                    "Offering Ability": offering_ability,
-                    "Dilution Risk": dilution_risk,
-                    "Cash Need": cash_need,
-                    "Ticker": ticker,
-                    "Price": round(current_price, 2),
-                    "Gain %": round(gain_pct, 2),
-                    "RSI": round(rsi, 2),
-                    "Market Cap": market_cap,
-                    "Cash ($)": cash,
-                    "Months Cash Left": months_cash_left,
-                    "Float": float_shares,
-                    "Shares Outstanding": shares_outstanding,
-                })
+                    results.append({
+                        "Offering Ability": offering_ability,
+                        "Dilution Risk": dilution_risk,
+                        "Cash Need": cash_need,
+                        "Ticker": ticker,
+                        "Price": round(current_price, 2),
+                        "Gain %": round(gain_pct, 2),
+                        "RSI": round(rsi, 2),
+                        "Market Cap": market_cap,
+                        "Cash ($)": cash,
+                        "Months Cash Left": months_cash_left,
+                        "Float": float_shares,
+                        "Shares Outstanding": shares_outstanding,
+                    })
                     
             except Exception as e:
                 st.warning(f"Error processing {ticker}: {e}")
