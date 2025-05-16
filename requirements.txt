@@ -1,6 +1,5 @@
 streamlit
 yfinance
 pandas
-streamlit-autorefresh
 plotly
 yahoo_fin
