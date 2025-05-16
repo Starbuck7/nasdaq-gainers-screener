@@ -5,6 +5,8 @@ import plotly.graph_objects as go
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 from yahoo_fin import stock_info as si
+from requests_html import HTMLSession
+
 
 # Auto-refresh every 5 minutes
 st.set_page_config(page_title="📈 NASDAQ Stock Screener", layout="wide")
