@@ -4,3 +4,4 @@ pandas
 streamlit-autorefresh
 plotly
 yahoo_fin
+requests-html
