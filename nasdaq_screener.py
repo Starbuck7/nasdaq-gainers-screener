@@ -109,15 +109,14 @@ if run_scan:
                 stock = yf.Ticker(ticker)
                 hist = stock.history(period="2d", interval="5m")
                 info = stock.info
-                if len(hist) < 2:
+                if hist.empty:
                     continue
 
-               
+            open_price = hist["Open"][0]
+            except Exception as e:
+                continue          
                 
 # Prices & RSI
-open_price = hist['Open'][0]
-            except Exception as e:
-                continue
 current_price = hist['Close'][-1]
 gain_pct = ((current_price - open_price) / open_price) * 100
 rsi_series = calculate_rsi(hist['Close'])
@@ -157,11 +156,7 @@ if gain_pct >= 30 and rsi and rsi > 70 and market_cap and market_cap < 5e7:
         "Float": float_shares,
         "Shares Outstanding": shares_outstanding,
     })
-            
-
-            except Exception as e:
-                continue
-    
+              
     # Display results
     if results:
         df = pd.DataFrame(results)
