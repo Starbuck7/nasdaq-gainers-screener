@@ -56,11 +56,10 @@ def highlight_cash_need(val):
     return "background-color: #d4edda; color: #155724"      # green
     
 # --- LOAD NASDAQ TICKERS ---
-@st.cache_data
-def load_nasdaq():
-    url = 'https://datahub.io/core/nasdaq-listings/r/nasdaq-listed.csv'
-    df = pd.read_csv(url)
-    return df["Ticker"].tolist()
+@st.cache_data(ttl=3600)
+def get_nasdaq_tickers():
+    table = pd.read_html("https://en.wikipedia.org/wiki/NASDAQ-100")[3]
+    return table["Ticker"].tolist()
 
 tickers = load_nasdaq()
 st.sidebar.write(f"Loaded {len(tickers)} NASDAQ tickers.")
