@@ -60,8 +60,6 @@ def highlight_cash_need(val):
 def get_nasdaq_tickers():
     table = pd.read_html("https://en.wikipedia.org/wiki/NASDAQ-100")[3]
     return table["Ticker"].tolist()
-
-tickers = load_nasdaq()
 st.sidebar.write(f"Loaded {len(tickers)} NASDAQ tickers.")
 
 # --- FILTERING ---
