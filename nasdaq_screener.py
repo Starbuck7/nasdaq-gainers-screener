@@ -64,13 +64,18 @@ def load_nasdaq():
 
     if 'symbol' in df.columns:
         return df['symbol'].dropna().unique().tolist()
+    elif 'ticker' in df.columns:
+        return df['ticker'].dropna().unique().tolist()
     else:
         st.error("Ticker column not found.")
         return []
+        
     tickers = load_nasdaq()
     if not tickers:
         st.error("No tickers loaded. Please check your NASDAQ data source.")
         st.stop()
+    
+    st.sidebar.write(f"Loaded {len(tickers)} NASDAQ tickers.")
         
 # --- FILTERING ---
 run_scan = st.button("🔍 Run Scan")
@@ -79,6 +84,7 @@ results = []
 if run_scan:
     with st.spinner("Scanning stocks (please wait 1-2 mins)..."):
         for ticker in tickers:
+            st.write(f"Scanning {ticker}...")
             try:
                 stock = yf.Ticker(ticker)
                 hist = stock.history(period="2d", interval="5m")
