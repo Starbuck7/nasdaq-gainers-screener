@@ -160,7 +160,7 @@ if gain_pct >= 30 and rsi and rsi > 70 and market_cap and market_cap < 5e7:
     if results:
         df = pd.DataFrame(results)
        
-    # Format numbers
+        # Format numbers
         df["Cash ($)"] = df["Cash ($)"].apply(human_format)
         df["Market Cap"] = df["Market Cap"].apply(human_format)
         df["Float"] = df["Float"].apply(human_format)
@@ -168,12 +168,12 @@ if gain_pct >= 30 and rsi and rsi > 70 and market_cap and market_cap < 5e7:
         df["Gain %"] = df["Gain %"].apply(lambda x: f"{x:.2f}%")
         df["RSI"] = df["RSI"].apply(lambda x: f"{x:.1f}" if x is not None else "-")
 
-    styled_df = (
-        df.style
-        .applymap(highlight_offering, subset=["Offering Ability"])
-        .applymap(highlight_dilution, subset=["Dilution Risk"])
-        .applymap(highlight_cash_need, subset=["Cash Need"])
-    )
+        styled_df = (
+            df.style
+            .applymap(highlight_offering, subset=["Offering Ability"])
+            .applymap(highlight_dilution, subset=["Dilution Risk"])
+            .applymap(highlight_cash_need, subset=["Cash Need"])
+        )
          
         st.success(f"Found {len(df)} matching stocks!")
         st.dataframe(styled_df, use_container_width=True)
