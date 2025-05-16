@@ -32,7 +32,11 @@ run_scan = st.sidebar.button("🔍 Run Screener")
 if run_scan:
     tickers = load_nasdaq_tickers()
     st.write(f"Total NASDAQ tickers loaded: {len(tickers)}")
+    with st.spinner("Running scan (cached for 10 minutes)..."):
+        results = run_scan_cached(tickers)
 
+@st.cache_data(ttl=600)  # cache results for 10 minutes
+def run_scan_cached(tickers):
     results = []
 
     for i, ticker in enumerate(tickers):
