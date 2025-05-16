@@ -21,10 +21,10 @@ Scan for **stocks with:**
 #Add chart as subheader
 st.subheader("📉 Price Charts")
 
-    for ticker in df["Ticker"]:
-        with st.expander(f"Chart for {ticker}"):
-            try:
-                chart_data = yf.Ticker(ticker).history(period="5d", interval="15m")
+for ticker in df["Ticker"]:
+    with st.expander(f"Chart for {ticker}"):
+        try:
+            chart_data = yf.Ticker(ticker).history(period="5d", interval="15m")
             if chart_data.empty:
                 st.warning("No chart data available.")
                 continue
