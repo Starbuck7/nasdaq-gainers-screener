@@ -24,6 +24,51 @@ def calculate_rsi(series, period=14):
     rsi = 100 - (100 / (1 + rs))
     return rsi
 
+@st.cache_data(ttl=600)  # cache results for 10 minutes
+def run_scan_cached(tickers):
+    results = []
+    for i, ticker in enumerate(tickers):
+        if i % 50 == 0:
+            st.write(f"Processing {i} / {len(tickers)} tickers...")
+
+        try:
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="3d", interval="1d")
+            if hist.shape[0] < 2:
+                continue
+            open_price = hist['Open'].iloc[-2]
+            close_price = hist['Close'].iloc[-1]
+            gain_pct = ((close_price - open_price) / open_price) * 100
+            if gain_pct < 30:
+                continue
+
+            hist_15d = stock.history(period="15d", interval="1d")
+            if hist_15d.empty or 'Close' not in hist_15d:
+                continue
+
+            rsi_series = calculate_rsi(hist_15d['Close'])
+            rsi = rsi_series.iloc[-1] if not rsi_series.empty else 0
+            if rsi <= 70:
+                continue
+
+            info = stock.info
+            market_cap = info.get('marketCap', 0)
+            if market_cap is None or market_cap >= 50_000_000:
+                continue
+
+            # Add any other analysis and append results
+            results.append({
+                "Ticker": ticker,
+                "Gain %": round(gain_pct, 2),
+                "RSI": round(rsi, 2),
+                "Market Cap": market_cap,
+            })
+
+        except Exception as e:
+            st.warning(f"Error processing {ticker}: {e}")
+            continue
+    return results
+    
 # --- UI Controls ---
 st.sidebar.header("📊 Filter Criteria")
 st.sidebar.write("Only analyzing today's top NASDAQ gainers.")
@@ -35,45 +80,10 @@ if run_scan:
     with st.spinner("Running scan (cached for 10 minutes)..."):
         results = run_scan_cached(tickers)
 
-@st.cache_data(ttl=600)  # cache results for 10 minutes
-def run_scan_cached(tickers):
-    results = []
-
-    for i, ticker in enumerate(tickers):
-        # Show progress
-        if i % 50 == 0:
-            st.write(f"Processing {i} / {len(tickers)} tickers...")
-
-        try:
-            stock = yf.Ticker(ticker)
-
-            # Get last 2 days daily data for gain calculation
-            hist = stock.history(period="3d", interval="1d")
-            if hist.shape[0] < 2:
-                continue
-            open_price = hist['Open'].iloc[-2]
-            close_price = hist['Close'].iloc[-1]
-            gain_pct = ((close_price - open_price) / open_price) * 100
-
-            if gain_pct < 30:
-                continue
-
-            # RSI calculation on last 15 days
-            hist_15d = stock.history(period="15d", interval="1d")
-            if hist_15d.empty or 'Close' not in hist_15d:
-                continue
-
-            rsi_series = calculate_rsi(hist_15d['Close'])
-            rsi = rsi_series.iloc[-1] if not rsi_series.empty else 0
-
-            if rsi <= 70:
-                continue
-
-            info = stock.info
-            market_cap = info.get('marketCap', 0)
-            if market_cap is None or market_cap >= 50_000_000:
-                continue
-
+    if results:
+        df = pd.DataFrame(results)
+        st.dataframe(df)
+        
             # Optional additional info
             cash = info.get('totalCash', None)
             operating_expenses = info.get('totalOperatingExpenses', None)
