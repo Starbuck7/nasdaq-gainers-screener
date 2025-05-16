@@ -116,6 +116,8 @@ if run_scan:
                 
 # Prices & RSI
 open_price = hist['Open'][0]
+            except Exception as e:
+                continue
 current_price = hist['Close'][-1]
 gain_pct = ((current_price - open_price) / open_price) * 100
 rsi_series = calculate_rsi(hist['Close'])
