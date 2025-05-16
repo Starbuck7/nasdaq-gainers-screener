@@ -1,0 +1,3 @@
+pip uninstall requests_html pyppeteer fake_useragent -y
+pip uninstall lxml_html_clean -y
+pip list | grep -E 'requests_html|pyppeteer|fake_useragent|lxml_html_clean'
