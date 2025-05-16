@@ -121,7 +121,8 @@ current_price = hist['Close'][-1]
 gain_pct = ((current_price - open_price) / open_price) * 100
 rsi_series = calculate_rsi(hist['Close'])
 rsi = rsi_series.iloc[-1] if not rsi_series.empty else None
-
+            except Exception as e:
+                continue   
 # Fundamentals
 market_cap = info.get("marketCap", 0)
 cash = info.get("totalCash", None)
@@ -133,9 +134,6 @@ float_shares = info.get("floatShares", None)
 offering_ability = "High" if float_shares and float_shares > 0.5 * shares_outstanding else "Low"
 dilution_risk = "High" if cash and cash < 10_000_000 and float_shares and float_shares > 0.7 * shares_outstanding else "Moderate"
 cash_need = "Urgent" if months_cash_left and months_cash_left < 3 else "Moderate"
-
-except Exception as e:
-                continue   
 
 # Calculate Months of Cash Left
 months_cash_left = None
