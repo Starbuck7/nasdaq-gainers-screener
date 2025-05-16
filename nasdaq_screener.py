@@ -140,6 +140,42 @@ if run_scan:
          
         st.success(f"Found {len(df)} matching stocks!")
         st.dataframe(styled_df, use_container_width=True)
+
+        #Add chart as subheader
+st.subheader("📉 Price Charts")
+
+    for ticker in df["Ticker"]:
+        with st.expander(f"Chart for {ticker}"):
+            try:
+                chart_data = yf.Ticker(ticker).history(period="5d", interval="15m")
+            if chart_data.empty:
+                st.warning("No chart data available.")
+                continue
+
+            fig = go.Figure(data=[
+                go.Candlestick(
+                    x=chart_data.index,
+                    open=chart_data['Open'],
+                    high=chart_data['High'],
+                    low=chart_data['Low'],
+                    close=chart_data['Close'],
+                    name="Candlesticks"
+                )
+            ])
+
+            fig.update_layout(
+                title=f"{ticker} - 5 Day Candlestick Chart",
+                xaxis_title="Time",
+                yaxis_title="Price",
+                xaxis_rangeslider_visible=False,
+                height=400,
+                margin=dict(l=10, r=10, t=40, b=10),
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+            except Exception:
+            st.warning(f"Could not load chart for {ticker}")
+        
     # Optional: Add CSV export
         csv = df.to_csv(index=False)
         st.download_button("📥 Download CSV", csv, "screener_results.csv", "text/csv")
