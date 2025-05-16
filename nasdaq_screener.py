@@ -156,33 +156,33 @@ if run_scan:
     st.subheader("📉 Price Charts")
     for ticker in df["Ticker"]:
         with st.expander(f"Chart for {ticker}"):
-        try:
-            chart_data = yf.Ticker(ticker).history(period="5d", interval="15m")
+            try:
+                chart_data = yf.Ticker(ticker).history(period="5d", interval="15m")
                 if chart_data.empty:
                     st.warning("No chart data available.")
-                continue
+                    continue
 
-                fig = go.Figure(data=[
-                    go.Candlestick(
+            fig = go.Figure(data=[
+                go.Candlestick(
                     x=chart_data.index,
                     open=chart_data['Open'],
                     high=chart_data['High'],
                     low=chart_data['Low'],
                     close=chart_data['Close'],
                     name="Candlesticks"
-                    )
-                ])
-
-                fig.update_layout(
-                    title=f"{ticker} - 5 Day Candlestick Chart",
-                    xaxis_title="Time",
-                    yaxis_title="Price",
-                    xaxis_rangeslider_visible=False,
-                    height=400,
-                    margin=dict(l=10, r=10, t=40, b=10),
                 )
+            ])
 
-                st.plotly_chart(fig, use_container_width=True)
+            fig.update_layout(
+                title=f"{ticker} - 5 Day Candlestick Chart",
+                xaxis_title="Time",
+                yaxis_title="Price",
+                xaxis_rangeslider_visible=False,
+                height=400,
+                margin=dict(l=10, r=10, t=40, b=10),
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
         except Exception:
             st.warning(f"Could not load chart for {ticker}")
 
