@@ -113,8 +113,7 @@ if run_scan:
                     continue
 
             open_price = hist["Open"][0]
-            except Exception as e:
-                continue          
+                  
                 
 # Prices & RSI
 current_price = hist['Close'][-1]
@@ -134,6 +133,8 @@ offering_ability = "High" if float_shares and float_shares > 0.5 * shares_outsta
 dilution_risk = "High" if cash and cash < 10_000_000 and float_shares and float_shares > 0.7 * shares_outstanding else "Moderate"
 cash_need = "Urgent" if months_cash_left and months_cash_left < 3 else "Moderate"
 
+ except Exception as e:
+                continue   
 
 # Calculate Months of Cash Left
 months_cash_left = None
