@@ -36,7 +36,7 @@ for ticker in df["Ticker"]:
                     high=chart_data['High'],
                     low=chart_data['Low'],
                     close=chart_data['Close'],
-                    name="Price"
+                    name="Candlesticks"
                 )
             ])
 
@@ -50,7 +50,7 @@ for ticker in df["Ticker"]:
             )
 
             st.plotly_chart(fig, use_container_width=True)
-        except Exception as e:
+        except Exception:
             st.warning(f"Could not load chart for {ticker}")
 
 
