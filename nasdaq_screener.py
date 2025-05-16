@@ -110,7 +110,9 @@ if run_scan:
                 hist = stock.history(period="2d", interval="5m")
                 info = stock.info
                 if hist.empty:
-                    continue                
+                    continue    
+            except Exception as e:
+                continue
                 
 # Prices & RSI
         open_price = hist["Open"][0]
@@ -152,8 +154,7 @@ if gain_pct >= 30 and rsi and rsi > 70 and market_cap and market_cap < 5e7:
         "Float": float_shares,
         "Shares Outstanding": shares_outstanding,
     })
-    except Exception:
-                continue
+    
               
     # Display results
     if results:
