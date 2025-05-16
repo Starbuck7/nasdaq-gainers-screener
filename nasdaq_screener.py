@@ -5,8 +5,6 @@ import plotly.graph_objects as go
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 from yahoo_fin import stock_info as si
-from requests_html import HTMLSession
-
 
 # Auto-refresh every 5 minutes
 st.set_page_config(page_title="📈 NASDAQ Stock Screener", layout="wide")
@@ -46,10 +44,9 @@ def highlight_cash_need(val):
 @st.cache_data
 def get_nasdaq_gainers():
     try:
-        gainers = si.get_day_gainers()
-        gainers = gainers[gainers['Volume'] > 100000]  # optional volume filter
-        nasdaq_gainers = gainers[gainers['Symbol'].str.contains(r'\.O$|\.Q$', regex=True)]
-        return nasdaq_gainers['Symbol'].tolist()
+        df = si.get_day_gainers()
+        nasdaq_gainers = df[df['Exchange'] == 'NASDAQ']['Symbol'].tolist()
+        return nasdaq_gainers
     except Exception as e:
         st.error(f"Error fetching gainers: {e}")
         return []
