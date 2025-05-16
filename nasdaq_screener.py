@@ -67,7 +67,7 @@ run_scan = st.button("🔍 Run Scan")
 results = []
 if run_scan:
     with st.spinner("Scanning stocks (please wait 1-2 mins)..."):
-        for ticker in tickers:  # Limit for demo
+        for ticker in tickers:
             try:
                 stock = yf.Ticker(ticker)
                 hist = stock.history(period="2d", interval="5m")
