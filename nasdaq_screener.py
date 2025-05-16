@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
+from yahoo_fin import stock_info as si
 
 # Auto-refresh every 5 minutes
 st.set_page_config(page_title="📈 NASDAQ Stock Screener", layout="wide")
@@ -41,24 +42,19 @@ def highlight_cash_need(val):
 
 # --- LOAD NASDAQ TICKERS ---
 @st.cache_data
-def load_nasdaq():
-    url = "https://datahub.io/core/nasdaq-listings/r/nasdaq-listed.csv"
-    df = pd.read_csv(url)
-    df.columns = df.columns.str.strip().str.lower()
-    if 'symbol' in df.columns:
-        return df['symbol'].dropna().unique().tolist()
-    elif 'ticker' in df.columns:
-        return df['ticker'].dropna().unique().tolist()
-    else:
-        st.error("Ticker column not found.")
+def get_nasdaq_gainers():
+    try:
+        gainers = si.get_day_gainers()
+        gainers = gainers[gainers['Volume'] > 100000]  # optional volume filter
+        nasdaq_gainers = gainers[gainers['Symbol'].str.contains(r'\.O$|\.Q$', regex=True)]
+        return nasdaq_gainers['Symbol'].tolist()
+    except Exception as e:
+        st.error(f"Error fetching gainers: {e}")
         return []
 
 # Load Tickers
-tickers = load_nasdaq()
-if not tickers:
-    st.error("No tickers loaded. Please check your NASDAQ data source.")
-    st.stop()
-st.sidebar.write(f"Loaded {len(tickers)} NASDAQ tickers.")
+tickers = get_nasdaq_gainers()
+st.sidebar.write(f"Loaded {len(tickers)} NASDAQ gainers today.")
 
 # --- RUN SCAN ---
 run_scan = st.button("🔍 Run Scan")
