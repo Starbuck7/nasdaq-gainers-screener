@@ -110,19 +110,15 @@ if run_scan:
                 hist = stock.history(period="2d", interval="5m")
                 info = stock.info
                 if hist.empty:
-                    continue
-
-            
-                  
+                    continue                
                 
 # Prices & RSI
-open_price = hist["Open"][0]
-current_price = hist['Close'][-1]
-gain_pct = ((current_price - open_price) / open_price) * 100
-rsi_series = calculate_rsi(hist['Close'])
-rsi = rsi_series.iloc[-1] if not rsi_series.empty else None
-            except Exception as e:
-                continue   
+        open_price = hist["Open"][0]
+        current_price = hist['Close'][-1]
+        gain_pct = ((current_price - open_price) / open_price) * 100
+        rsi_series = calculate_rsi(hist['Close'])
+        rsi = rsi_series.iloc[-1] if not rsi_series.empty else None
+            
 # Fundamentals
 market_cap = info.get("marketCap", 0)
 cash = info.get("totalCash", None)
@@ -156,6 +152,8 @@ if gain_pct >= 30 and rsi and rsi > 70 and market_cap and market_cap < 5e7:
         "Float": float_shares,
         "Shares Outstanding": shares_outstanding,
     })
+    except Exception:
+                continue
               
     # Display results
     if results:
